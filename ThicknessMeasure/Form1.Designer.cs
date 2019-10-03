@@ -88,12 +88,13 @@
 			this.menuThicknessMonitor = new System.Windows.Forms.ToolStripMenuItem();
 			this.公正有効化ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.gbAllResult = new System.Windows.Forms.GroupBox();
+			this.bPrintout = new System.Windows.Forms.Button();
 			this.lAllAverage = new System.Windows.Forms.Label();
 			this.bAllResult = new System.Windows.Forms.Button();
 			this.tbAllAverage = new System.Windows.Forms.TextBox();
 			this.gbOffset = new System.Windows.Forms.GroupBox();
 			this.pd = new System.Drawing.Printing.PrintDocument();
-			this.bPrintout = new System.Windows.Forms.Button();
+			this.lVersion = new System.Windows.Forms.Label();
 			this.gbCont.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.nudOffsetG)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.nudOffsetF)).BeginInit();
@@ -984,6 +985,18 @@
 			this.gbAllResult.TabStop = false;
 			this.gbAllResult.Text = "総合結果";
 			// 
+			// bPrintout
+			// 
+			this.bPrintout.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+			this.bPrintout.Font = new System.Drawing.Font("MS UI Gothic", 25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+			this.bPrintout.Location = new System.Drawing.Point(740, 23);
+			this.bPrintout.Name = "bPrintout";
+			this.bPrintout.Size = new System.Drawing.Size(158, 54);
+			this.bPrintout.TabIndex = 52;
+			this.bPrintout.Text = "印刷";
+			this.bPrintout.UseVisualStyleBackColor = true;
+			this.bPrintout.Click += new System.EventHandler(this.bPrintout_Click);
+			// 
 			// lAllAverage
 			// 
 			this.lAllAverage.AutoSize = true;
@@ -1045,23 +1058,21 @@
 			this.gbOffset.TabStop = false;
 			this.gbOffset.Text = "校正";
 			// 
-			// bPrintout
+			// lVersion
 			// 
-			this.bPrintout.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-			this.bPrintout.Font = new System.Drawing.Font("MS UI Gothic", 25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-			this.bPrintout.Location = new System.Drawing.Point(740, 23);
-			this.bPrintout.Name = "bPrintout";
-			this.bPrintout.Size = new System.Drawing.Size(158, 54);
-			this.bPrintout.TabIndex = 52;
-			this.bPrintout.Text = "印刷";
-			this.bPrintout.UseVisualStyleBackColor = true;
-			this.bPrintout.Click += new System.EventHandler(this.bPrintout_Click);
+			this.lVersion.AutoSize = true;
+			this.lVersion.Location = new System.Drawing.Point(1273, 12);
+			this.lVersion.Name = "lVersion";
+			this.lVersion.Size = new System.Drawing.Size(35, 12);
+			this.lVersion.TabIndex = 43;
+			this.lVersion.Text = "label2";
 			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(1358, 744);
+			this.Controls.Add(this.lVersion);
 			this.Controls.Add(this.gbOffset);
 			this.Controls.Add(this.gbAllResult);
 			this.Controls.Add(this.gbConnect);
@@ -1172,6 +1183,7 @@
 		private System.Windows.Forms.TextBox tbResultLotName;
 		private System.Drawing.Printing.PrintDocument pd;
 		private System.Windows.Forms.Button bPrintout;
+		private System.Windows.Forms.Label lVersion;
 	}
 }
 

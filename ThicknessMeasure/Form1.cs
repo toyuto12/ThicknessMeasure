@@ -73,6 +73,8 @@ namespace ThicknessMeasure {
 
 		private void Form1_Load(object sender, EventArgs e) {
 
+			lVersion.Text = "Ver0.90a";
+
 			ExchangeComPortList();
 			int l = Offset.Length;
 
