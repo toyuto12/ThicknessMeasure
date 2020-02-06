@@ -94,7 +94,7 @@
 			this.tbAllAverage = new System.Windows.Forms.TextBox();
 			this.gbOffset = new System.Windows.Forms.GroupBox();
 			this.pd = new System.Drawing.Printing.PrintDocument();
-			this.lVersion = new System.Windows.Forms.Label();
+			this.button2 = new System.Windows.Forms.Button();
 			this.gbCont.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.nudOffsetG)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.nudOffsetF)).BeginInit();
@@ -146,6 +146,7 @@
 			// 
 			// gbCont
 			// 
+			this.gbCont.Controls.Add(this.button2);
 			this.gbCont.Controls.Add(this.tbLotName);
 			this.gbCont.Controls.Add(this.label1);
 			this.gbCont.Controls.Add(this.bGraph);
@@ -1058,21 +1059,24 @@
 			this.gbOffset.TabStop = false;
 			this.gbOffset.Text = "校正";
 			// 
-			// lVersion
+			// button2
 			// 
-			this.lVersion.AutoSize = true;
-			this.lVersion.Location = new System.Drawing.Point(1273, 12);
-			this.lVersion.Name = "lVersion";
-			this.lVersion.Size = new System.Drawing.Size(35, 12);
-			this.lVersion.TabIndex = 43;
-			this.lVersion.Text = "label2";
+			this.button2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+			this.button2.Font = new System.Drawing.Font("MS UI Gothic", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+			this.button2.Location = new System.Drawing.Point(138, 86);
+			this.button2.Margin = new System.Windows.Forms.Padding(0);
+			this.button2.Name = "button2";
+			this.button2.Size = new System.Drawing.Size(45, 29);
+			this.button2.TabIndex = 52;
+			this.button2.Text = "キョリ";
+			this.button2.UseVisualStyleBackColor = true;
+			this.button2.Click += new System.EventHandler(this.button2_Click);
 			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(1358, 744);
-			this.Controls.Add(this.lVersion);
 			this.Controls.Add(this.gbOffset);
 			this.Controls.Add(this.gbAllResult);
 			this.Controls.Add(this.gbConnect);
@@ -1084,7 +1088,7 @@
 			this.MainMenuStrip = this.menuStrip1;
 			this.Name = "Form1";
 			this.ShowIcon = false;
-			this.Text = "厚み測定ジグ";
+			this.Text = "厚み測定ジグ  ";
 			this.Load += new System.EventHandler(this.Form1_Load);
 			this.gbCont.ResumeLayout(false);
 			this.gbCont.PerformLayout();
@@ -1183,7 +1187,7 @@
 		private System.Windows.Forms.TextBox tbResultLotName;
 		private System.Drawing.Printing.PrintDocument pd;
 		private System.Windows.Forms.Button bPrintout;
-		private System.Windows.Forms.Label lVersion;
+		private System.Windows.Forms.Button button2;
 	}
 }
 

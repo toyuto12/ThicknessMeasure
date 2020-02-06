@@ -17,6 +17,8 @@ using System.Timers;
 
 namespace ThicknessMeasure {
 	public partial class Form1 :Form {
+
+		const String VerMes = "Ver 0.90b";
 		const String OFFSET_FILE_NAME = "ofs.dat";							// オフセットデータ保存用ファイル名
 		const String DATA_FILE_NAME = "result";								// データ保存用ファイル名プレフィックス
 
@@ -25,11 +27,11 @@ namespace ThicknessMeasure {
 		SerialConnector _port;												// シリアルポートとの接続管理
 		static stThickness[] _monitor = new stThickness[7];					// リアルタイムデータ保存用（別窓で参照したいのでstatic指定
 		Queue<stThickness[][]> Result = new Queue<stThickness[][]>();       // 測定データ取得整理後の蓄積用キュー（１シート単位）
-		Queue<Char[]> SensorErrQ = new Queue<char[]>();						// センサーエラー検知時のデータ保持キュー
+		Queue<Char[]> SensorErrQ = new Queue<char[]>();                     // センサーエラー検知時のデータ保持キュー
 
-		List<stThicknessResult> ResultData = new List<stThicknessResult>(); // 測定表示データ一覧
+		TicknessResultAdapter ResultMaster = new TicknessResultAdapter(DateTime.Now);
+
 		stThicknessResult nowDisplayData;									// 表示中データ
-		int CheckNGValue = 0;                                               // 不良数カウンター
 		int nowLot = 0;
 		int maxLot = 0;
 
@@ -46,7 +48,7 @@ namespace ThicknessMeasure {
 
 		Timeout _to;                                                        // オフセット処理タイムアウトカウント用
 
-		System.Threading.Mutex mutex;										// 二重起動禁止処理用
+		System.Threading.Mutex mutex;                                       // 二重起動禁止処理用
 
 		// センサ測定位置（Ｘ方向）（割合データ）
 		float[] _sensXpos = { 0.074286f, 0.217143f, 0.36f, 0.502857f, 0.645714f, 0.788571f, 0.931429f };
@@ -73,7 +75,7 @@ namespace ThicknessMeasure {
 
 		private void Form1_Load(object sender, EventArgs e) {
 
-			lVersion.Text = "Ver0.90a";
+			this.Text += VerMes;
 
 			ExchangeComPortList();
 			int l = Offset.Length;
@@ -85,6 +87,7 @@ namespace ThicknessMeasure {
 			BodyType.Add(new stBodyType("4130 ネオサーム(INF)6t", 0.989f, 6, 5.5f, 6.6f, new double[] { 5.4, 5.56, 6.61 }, c));
 			BodyType.Add(new stBodyType("5130-TN FFﾍﾟｰﾊﾟｰ4t", 1.045f, 4, 3.75f, 4.4f, new double[] { 3.6, 3.76, 4.41 }, c));
 			BodyType.Add(new stBodyType("5130-TN FFﾍﾟｰﾊﾟｰ6t", 1.037f, 6, 5.4f, 6.6f, new double[] { 5.5, 5.61, 6.60, 6.90 }, c));
+
 
 			// 加工型番データ
 			D111_40180_14 = new tkMeasureRange(350, 300, 50.6f/2);
@@ -146,10 +149,6 @@ namespace ThicknessMeasure {
 			pd.PrintPage += Pd_PrintPage;
 			pd.DefaultPageSettings.Landscape = true;
 
-			//PrintPreviewDialog ppd = new PrintPreviewDialog();
-			//ppd.Document = pd;
-			//ppd.ShowDialog();
-
 		}
 
 		// 印刷処理用イベントハンドラ
@@ -180,7 +179,8 @@ namespace ThicknessMeasure {
 
 			// 総数
 			var pageRect = new RectangleF(lotRect.Right, baseRect.Y, 190, 60);
-			int allVal = ResultData.Count();
+//			int allVal = ResultData.Count();
+			int allVal = ResultMaster.Qty;
 			DrawTextBox(ref e, "総　数", 20, pageRect, Brushes.White, Brushes.Black);
 			pageRect = new RectangleF(pageRect.X, pageRect.Bottom, pageRect.Width, baseRect.Height-pageRect.Height);
 			DrawQtyBox(ref e, allVal, "枚", 30, pageRect);
@@ -232,21 +232,21 @@ namespace ThicknessMeasure {
 			rrect2.Y = rrect2.Bottom;
 			DrawTextBox(ref e, "不合格", 30, rrect2, Brushes.White, Brushes.Red);
 
-			var res = GetResult2JudgeData(ref ResultData);
+			var res = ResultMaster.ResultCount4Rank;
 
 			rrect2.Y = rrect.Bottom;
 			rrect2.X = rrect2.Right;
 			rrect2.Width = rrect.Width-rrect2.Width;
-			DrawQtyBox(ref e, res[0], "枚", 30, rrect2);
+			DrawQtyBox(ref e, res[2], "枚", 30, rrect2);
+
+			rrect2.Y = rrect2.Bottom;
+			DrawQtyBox(ref e, res[3], "枚", 30, rrect2);
 
 			rrect2.Y = rrect2.Bottom;
 			DrawQtyBox(ref e, res[1], "枚", 30, rrect2);
 
 			rrect2.Y = rrect2.Bottom;
-			DrawQtyBox(ref e, res[2], "枚", 30, rrect2);
-
-			rrect2.Y = rrect2.Bottom;
-			DrawQtyBox(ref e, res[3], "枚", 30, rrect2);
+			DrawQtyBox(ref e, res[0], "枚", 30, rrect2);
 
 			rrect.X = rrect.Right;
 			rrect.Width = 220;
@@ -380,16 +380,31 @@ namespace ThicknessMeasure {
 
 			var r = fd.ShowDialog();
 			if (r == DialogResult.OK) {
-				List<stThicknessResult> d = null;
+				//List<stThicknessResult> d = null;
 				String file = Path.GetFileNameWithoutExtension(fd.FileName);
 				String dic = Path.GetDirectoryName(fd.FileName);
 				for (int i = 0; i<=maxLot; i++) {
-					LoadResultFile(ref d, GetTodaySubfolder, i);
-					if (d != null) {
-						CSVOutput(dic + "/" + file + d[0].now.ToString("yyyyMMdd") + i.ToString("00") + ".csv", d);
-						CSVTitleOutput(dic + "/" + file + d[0].now.ToString("yyyyMMdd") + i.ToString("00") + "Title.csv", d);
-					}
+					//					LoadResultFile(ref d, GetTodaySubfolder, i);
+					//					LoadResultFile(GetTodaySubfolder, i);
+					//					if (d != null) {
+					var d = ResultMaster.ReadResult(0);
+					CSVOutput(dic + "/" + file + d.now.ToString("yyyyMMdd") + i.ToString("00") + ".csv" );
+					CSVTitleOutput(dic + "/" + file + d.now.ToString("yyyyMMdd") + i.ToString("00") + "Title.csv");
+//					}
 				}
+			}
+		}
+
+		// 電圧表出力ボタン押下
+		private void button2_Click(object sender, EventArgs e) {
+			SaveFileDialog fd = new SaveFileDialog();
+			fd.Title = "保存するファイル";
+			fd.Filter = "CSVファイル(*.csv)|*.csv|すべてのファイル(*.+)|*.*";
+			fd.RestoreDirectory = true;
+
+			var r = fd.ShowDialog();
+			if (r == DialogResult.OK) {
+				CSVgraphOutput2AD(fd.FileName, nowDisplayData);
 			}
 		}
 
@@ -399,7 +414,6 @@ namespace ThicknessMeasure {
 				ResultPrintout();
 			}
 		}
-
 
 		// Lot加算ボタン押下
 		private void bNext_Click(object sender, EventArgs e) {
@@ -514,7 +528,7 @@ namespace ThicknessMeasure {
 
 		/// ロットデータ管理用メソッド郡
 		String[] GetResultFileNames( String subFolder ) {
-			return Directory.GetFiles(subFolder, "result???");
+			return Directory.GetFiles(subFolder, "result???_0000");
 		}
 
 		// ロットデータファイルを見に行って、最終番号を取得する
@@ -523,7 +537,7 @@ namespace ThicknessMeasure {
 			if (Directory.Exists(subFolder)) {
 				foreach (String f in GetResultFileNames(subFolder)) {
 					int no;
-					if (int.TryParse(f.Substring(f.Length-3, 3), out no)) {
+					if (int.TryParse(f.Substring(f.Length-8, 3), out no)) {
 						if (max < no) max = no;
 					}
 				}
@@ -531,48 +545,6 @@ namespace ThicknessMeasure {
 			return max;
 		}
 
-		// 測定結果データをソフトに反映させる
-		void LoadResultFile( String subfolder, int lotNo ) {
-			LoadResultFile(ref ResultData, subfolder, lotNo);
-		}
-
-		void LoadResultFile( ref List<stThicknessResult> datas, String subfolder, int lotNo) {
-			datas = null;
-			if (lotNo != -1) {
-				datas = (List<stThicknessResult>)ObjectSerializer.LoadFile(subfolder + "/"+ DATA_FILE_NAME + lotNo.ToString("000"));
-				CheckNGValue = GetResult2NGCount();
-			}
-			if (datas == null) {
-				datas = new List<stThicknessResult>();
-			}
-		}
-
-
-		// 現在のResultDataから、合否判定別の数量を取り出す
-		int[] GetResult2JudgeData( ref List<stThicknessResult> data) {
-			int[] r = new int[] { 0, 0, 0, 0 };
-			foreach(var d in data) {
-				int lv;
-				if (d._allResult == "不合格") lv = -1;
-				else lv = d.type.GetJudgeTypeNo((double)GetEndValue(d._allAverage));
-				if (lv == -1) r[0]++;
-				else r[lv+1]++;
-			}
-			return r;
-		}
-
-		// 現在のResultDataから、ＮＧ数を取り出す
-		int GetResult2NGCount() => GetResult2NGCount( ref ResultData);
-
-		int GetResult2NGCount( ref List<stThicknessResult> data) {
-			int ngCnt = 0;
-			if (data != null) {
-				foreach (var r in data) {
-					if (r._allResult != "合格") ngCnt++;
-				}
-			}
-			return ngCnt;
-		}
 
 		// Lotボタン関係の処理
 		void LotControl(bool isUp) {
@@ -590,7 +562,9 @@ namespace ThicknessMeasure {
 				maxLot = lotNo;
 				bMeasureControl(false);
 			}
-			LoadResultFile(GetTodaySubfolder, lotNo);
+			// 現在有効データを更新
+			ResultMaster = new TicknessResultAdapter(DateTime.Now, lotNo);
+//			LoadResultFile(GetTodaySubfolder, lotNo);
 			DisplayResult();
 
 		}
@@ -708,16 +682,17 @@ namespace ThicknessMeasure {
 		}
 
 		// 測定結果を画面に反映させる
-		void DisplayResult() => DisplayResult(ResultData.Count-1);
-
+		void DisplayResult() => DisplayResult(ResultMaster.Qty-1);
 		void DisplayResult( int no ) {
 			stThicknessResult data;
 
-			if ((ResultData.Count > 0) && (no < ResultData.Count())) data = ResultData[no];
-			else data = null;
+			//			if ((ResultData.Count > 0) && (no < ResultData.Count())) data = ResultData[no];
+			//			else data = null;
+			data = ResultMaster.ReadResult(no);
+
 			nowDisplayData = data;
 
-			ExchangeBodytype(ref data);
+			ExchangeBodytype(ref data);			// 判定をランク別にする以前のデータに判定値を押し込める
 
 			if ( data != null) {
 				Color c;
@@ -735,7 +710,8 @@ namespace ThicknessMeasure {
 				ChangeReportColor(c, c);
 			}
 
-			PageValueExchange(no+1, ResultData.Count());
+//			PageValueExchange(no+1, ResultData.Count());
+			PageValueExchange(no+1, ResultMaster.pageMax);
 			lLotDisp.Text = String.Format("ロット {0} / {1}", nowLot+1, maxLot+1);
 
 			dgvResult.Rows.Clear();
@@ -763,7 +739,7 @@ namespace ThicknessMeasure {
 					tbResultMember.Text = String.Format("検査担当者：{0}", data._humanName);
 
 				int[] result = new int[] { 1, 1, 1, 1, 1, 1, 1 };		// 複数判定用処理
-				int allResult = 1;										// 複数判定用処理
+//				int allResult = 1;										// 複数判定用処理
 				for (int i = 0; i<4; i++) {
 					for (int j = 0; j<7; j++) {
 						DataGridViewCell cell = dgvResult[j+1, i];
@@ -801,7 +777,7 @@ namespace ThicknessMeasure {
 								cell.Value = "良";
 							}
 
-							allResult = GetMeasureLvMax(allResult, result[j]);
+							//allResult = GetMeasureLvMax(allResult, result[j]);
 							break;
 						}
 
@@ -811,6 +787,7 @@ namespace ThicknessMeasure {
 
 
 				tbAllAverage.Text = data._allAverage;
+				int allResult = data.GetRankValue();
 				bAllResult.BackColor = data.type.GetJudgeColorFromTypeNo(allResult);
 				switch ( allResult) {
 				case 0:
@@ -827,7 +804,7 @@ namespace ThicknessMeasure {
 					break;
 				}
 
-				lNGValue.Text = String.Format("不良数： {0}枚", CheckNGValue);
+				lNGValue.Text = String.Format("不良数： {0}枚", ResultMaster.ResultCount4Rank[0]);
 			} else {
 				tbResultDate.Text = String.Format("検査日：");
 				tbResultType.Text = String.Format("検査品番：");
@@ -841,6 +818,7 @@ namespace ThicknessMeasure {
 				tbAllAverage.Text = "";
 				bAllResult.BackColor = SystemColors.Control;
 				bAllResult.Text = "";
+				lNGValue.Text = String.Format("不良数： 0枚");
 			}
 		}
 
@@ -882,7 +860,7 @@ namespace ThicknessMeasure {
 					int cnt = sumcnts[j];
 					bool result = results[j];
 
-					var pos = this.SelectedItem.CheckMeasureRange2Rect(new PointF(_sensXpos[d.Group-'A'], d.PosPer));
+					var pos = SelectedItem.CheckMeasureRange2Rect(new PointF(_sensXpos[d.Group-'A'], d.PosPer));
 					if( pos.X != -1) {
 						if( (maxs[j] == null) || (maxs[j].mmValue < d.mmValue) ) {
 							d.Pos = pos.Y;
@@ -894,7 +872,6 @@ namespace ThicknessMeasure {
 						}
 						sums[j] += d.mmValue;
 						sumcnts[j] ++;
-					
 
 						if (d.Result == false) results[j] = false;
 					}
@@ -906,11 +883,9 @@ namespace ThicknessMeasure {
 			r[1] = new string[7];
 			r[2] = new string[7];
 			r[3] = new string[7];
-			int[] typeResult = new int[] { 1, 1, 1, 1, 1, 1, 1 };
 			int allTypeResult = 1;
 
 			float allSums = 0, allSumcnt = 0;
-			bool allResult = true;
 			for (int i = 0; i<7; i++) {
 				if (maxs[i] != null) {
 					r[0][i] = mins[i].GetResultStr();
@@ -918,13 +893,9 @@ namespace ThicknessMeasure {
 					r[2][i] = (Math.Round(sums[i] /sumcnts[i],2)).ToString("F2") + "mm";
 
 					r[3][i] = (results[i]) ? "良" : "不良";
-					if (!results[i]) allResult = false;
 
-					allTypeResult = GetMeasureLvMax(allTypeResult, mins[i].type.GetJudgeTypeNo(mins[i].mmValue));
-					allTypeResult = GetMeasureLvMax(allTypeResult, maxs[i].type.GetJudgeTypeNo(maxs[i].mmValue));
-//					typeResult[i] = GetMeasureLvMax(typeResult[i], mins[i].type.GetJudgeTypeNo(mins[i].mmValue));
-//					typeResult[i] = GetMeasureLvMax(typeResult[i], maxs[i].type.GetJudgeTypeNo(mins[i].mmValue));
-//					allTypeResult = GetMeasureLvMax(allTypeResult, typeResult[i]);
+					allTypeResult = GetMeasureLvMax(allTypeResult, mins[i].GetResultRank());
+					allTypeResult = GetMeasureLvMax(allTypeResult, maxs[i].GetResultRank());
 
 					allSums += sums[i];
 					allSumcnt += sumcnts[i];
@@ -936,34 +907,30 @@ namespace ThicknessMeasure {
 			String part = cbBodyType.Text;
 			String allAvr = (allSums/allSumcnt).ToString("F2") + "mm";
 
-			ResultData.Add(new stThicknessResult( data, tbLotName.Text, part, SelectedType, "", (String)cbName.SelectedItem, r, allAvr , (allResult) ?"合格" :"不合格" ));
 
+			var tmp = new stThicknessResult(data, tbLotName.Text, part, SelectedType, "", (String)cbName.SelectedItem, r, allAvr, null);
 			switch (allTypeResult) {
 			case 0:
 				PlaySE(eMelodyType.Y_TRUE);
+				tmp._allResult = "合格,0";
 				break;
 			case 1:
 				PlaySE(eMelodyType.TRUE);
+				tmp._allResult = "合格,1";
 				break;
 			case 2:
 				PlaySE(eMelodyType.SP_ADPO);
+				tmp._allResult = "合格,2";
 				break;
 			default:
 				PlaySE(eMelodyType.FALSE);
+				tmp._allResult = "不合格.-1";
 				break;
 			}
 
-			//if (allResult) {
-			//	PlaySE(eMelodyType.TRUE);
-			//} else {
-			//	CheckNGValue++;
-			//	PlaySE(eMelodyType.FALSE);
-			//}
+			ResultMaster.AddResult(tmp);
 
-			PageValueExchange(ResultData.Count(), ResultData.Count());
-
-			if (!Directory.Exists(GetTodaySubfolder)) Directory.CreateDirectory(GetTodaySubfolder);
-			ObjectSerializer.SaveFile(ResultData, GetTodaySubfolder + "/" + DATA_FILE_NAME + nowLot.ToString("000"));
+			PageValueExchange(ResultMaster.Qty, ResultMaster.Qty);
 
 		}
 
@@ -976,24 +943,26 @@ namespace ThicknessMeasure {
 		}
 
 		// 現在確定した測定データのタイトルをCSVファイルに出力する
-		void CSVTitleOutput(String filePath, List<stThicknessResult> datas) {
+		void CSVTitleOutput(String filePath){
 			CsvOutput csv = new CsvOutput();
+			var datas = ResultMaster.ReadResult(0);
 
 			csv.DataInput(2, 3, "母材");
-			csv.DataInput(2, 4,  datas[0].type._typeName);
+			csv.DataInput(2, 4,  datas.type._typeName);
 
 			csv.DataInput(2, 6,  "総数");
-			csv.DataInput(2, 7,  datas.Count().ToString() + " 枚");
+			csv.DataInput(2, 7,  ResultMaster.Qty.ToString() + " 枚");
 
 			csv.DataInput(2, 9,  "原板ロット");
-			csv.DataInput(2, 10, datas[0]._lotName);
+			csv.DataInput(2, 10, datas._lotName);
 
 
 			csv.DataInput(6, 3, "検査日");
-			csv.DataInput(6, 4, datas[0].now.ToString("yyyy年"));
-			csv.DataInput(7, 4, datas[0].now.ToString("MM月dd日"));
+			csv.DataInput(6, 4, datas.now.ToString("yyyy年"));
+			csv.DataInput(7, 4, datas.now.ToString("MM月dd日"));
 
-			int[] res = GetResult2JudgeData(ref datas);
+//			int[] res = GetResult2JudgeData(ref datas);
+			int[] res = ResultMaster.ResultCount4Rank;
 			csv.DataInput(6, 6, "合格（紫）");
 			csv.DataInput(7, 6, String.Format("{0}枚", res[3]));
 			csv.DataInput(6, 7, "合格（緑）");
@@ -1009,14 +978,16 @@ namespace ThicknessMeasure {
 		}
 
 		// 現在確定した測定データ一覧をCSVファイルに出力する
-		void CSVOutput(String filePath, List<stThicknessResult> datas) {
+		void CSVOutput(String filePath){
 			CsvOutput csv = new CsvOutput();
-			int pageMax = datas.Count();
+			var datas = ResultMaster.ReadResult(0);
+			int pageMax = ResultMaster.Qty;
 			int page = 1;
 
-			if (datas.Count() == 0) return;
+			if (ResultMaster.Qty == 0) return;
 
-			foreach (var d in datas) {
+			for(int i=0; i<pageMax; i++) {
+				var d = ResultMaster.ReadResult(i);
 				csv.DataInput(0, 0, String.Format("{0}枚中{1}枚目", pageMax, page));
 				csv.DataInput(0, 1, "検査日");
 				csv.DataInput(1, 1, d.now.ToString("yyyy/MM/dd HH:mm:ss"));
@@ -1029,7 +1000,7 @@ namespace ThicknessMeasure {
 				csv.DataInput(3, 2, "総合平均");
 				csv.DataInput(4, 2, d._allAverage);
 				csv.DataInput(3, 3, "基準値");
-				csv.DataInput(4, 3,d.type.GetRange);
+				csv.DataInput(4, 3, d.type.GetRange);
 				csv.DataInput(7, 1, "検査担当者");
 				csv.DataInput(8, 1, d._humanName);
 
@@ -1054,6 +1025,7 @@ namespace ThicknessMeasure {
 
 				csv.AddOffset(0, 13);
 				page++;
+
 			}
 			csv.FileOut(filePath);
 		}
@@ -1067,6 +1039,27 @@ namespace ThicknessMeasure {
 			int x = 1, y = 1;
 			foreach( var val in data.GetResultMM() ) {
 				if( !float.IsNaN(val) ) {
+					csv.DataInput(x, y, val.ToString());
+					x++;
+				} else {
+					csv.DataInput(0, y, y.ToString());
+					y++;
+					x = 1;
+				}
+			}
+
+			csv.FileOut(filePath);
+		}
+
+		// 測定データ全てをCSVファイルに出力する
+		void CSVgraphOutput2AD(String filePath, stThicknessResult data) {
+			CsvOutput csv = new CsvOutput();
+
+			csv.DataInput(0, 0, new String[] { "CNT", "A", "B", "C", "D", "E", "F", "G" });
+
+			int x = 1, y = 1;
+			foreach (var val in data.GetResultVoltage()) {
+				if (!float.IsNaN(val) ) {
 					csv.DataInput(x, y, val.ToString());
 					x++;
 				} else {
@@ -1144,19 +1137,29 @@ namespace ThicknessMeasure {
 				int cnt = 0;
 				bool dataEn = true;
 				int[] errCnt = new int[] { 0, 0, 0, 0, 0, 0, 0 };
+				int DataEdgeNo = -1;
+				int DataEdgeCnt = 0;
 
 				for (int i = 0; i<data.Length; i++) {
 					if (data[i] != 0xFFFF) {
 						if (data[i] == 0) dataEn = false;
 						else if (data[i] == 0xFFFE) errCnt[gr-'A']++;
-						row.Add(new stThickness(SelectedType, data[i], Offset[gr-'A'].ad, Offset[gr-'A'].mm, gr, i/8, data.Length/8));
+
+						var tmp = new stThickness( SelectedType, data[i], Offset[gr-'A'].ad, Offset[gr-'A'].mm, gr, cnt, 1 );
+						if ( tmp.mmValue >= 12 ) isDataEdge = i/8 ;
+
+						// row.Add(new stThickness(SelectedType, data[i], Offset[gr-'A'].ad, Offset[gr-'A'].mm, gr, i/8, data.Length/8));
 						gr++;
 					} else {
 						if( !dataEn) cnt++;
 						col.Add(row.ToArray());
 						dataEn = true;
 						_monitor = row.ToArray();
-						row = new List<stThickness>();
+						if ( isDataEdge ) DataEdgeCnt++;
+						if ( DataEdgeCnt > 2 ) {
+							row = new List<stThickness>();
+						}
+
 						gr = 'A';
 					}
 				}
@@ -1190,7 +1193,7 @@ namespace ThicknessMeasure {
 				tbLotName.ReadOnly = false;
 				isMeasure = false;
 				bMeasure.BackColor = SystemColors.Control;
-				_port._port.WriteLine("CP");
+				if( _port != null ) _port._port.WriteLine("CP");
 				cmdValue = 0;
 			} else {
 				if( cbName.Text != "" && tbLotName.Text !=  "" ) {
@@ -1199,7 +1202,7 @@ namespace ThicknessMeasure {
 					isMeasure = true;
 					gbOffset.Enabled = false;
 					bMeasure.BackColor = Color.LawnGreen;
-					_port._port.WriteLine("CS");
+					if( _port != null) _port._port.WriteLine("CS");
 					cmdValue = 1;
 				}
 			}
@@ -1238,6 +1241,137 @@ namespace ThicknessMeasure {
 			MessageBox.Show("校正に失敗しました");
 		}
 
+	}
+
+	public class TicknessResultAdapter {
+//		int lotNo;
+//		int offset;
+
+		public int pageMax { get; private set; }
+		int nowGroupNo;
+		List<stThicknessResult> nowPageData;
+
+		String DATA_FILE_NAME;
+		String filePattern;
+		String folderName;
+
+		const int PAGE_SIZE = 50;
+
+		public int[] ResultCount4Rank { get; private set; }             // 合格判定別のロット毎の数を記録
+		public int Qty { get { return ResultCount4Rank.Sum(); } }		// 判定結果の合計＝総数
+
+		public String[] GetFileList {
+			get {
+				var files = Directory.GetFiles("./" + folderName, filePattern + "_*");
+				Array.Sort(files);
+				return files;
+			}
+		}
+
+		public TicknessResultAdapter(DateTime dateFolder, int lotNo = 0) {
+			DATA_FILE_NAME = "Result";
+			folderName = dateFolder.ToString("yyyyMMdd");
+			filePattern = String.Format("Result{0:000}", lotNo);
+			InitData();
+		}
+
+
+		public void DivisionFile( string fileName) {
+			var dataList = LoadFile(fileName);
+			int divNo = 0;
+			while( dataList.Count() > 0) {
+				if (dataList.Count() > 50) {
+					var save = dataList.Take(50).ToList();
+					SaveFile(save, divNo++);
+					dataList = dataList.Skip(50).ToList();
+				} else {
+					SaveFile(dataList, divNo);
+					break;
+				}
+			}
+		}
+
+		/// <summary>分割ファイルから現在データを吸い取る</summary>
+		void InitData() {
+			List<stThicknessResult> dataList;
+			int[] rank = { 0, 0, 0, 0 };
+			int pageCnt = 0, grCnt = 0;
+
+			if (!Directory.Exists("./"+folderName)) Directory.CreateDirectory("./"+folderName);
+
+			foreach (string file in GetFileList) {
+				dataList = LoadFile(Path.GetFileName(file));
+				int[] r = dataList.GetResultRank();
+				for (int i = 0; i<rank.Length; i++) rank[i] += r[i];
+				pageCnt += dataList.Count();
+				grCnt++;
+				nowPageData = dataList;		// 最新版を捕獲
+			}
+			pageMax = pageCnt;
+			nowGroupNo = grCnt-1;
+			ResultCount4Rank = rank;
+		}
+
+		/// <summary>リザルトデータを追加する</summary>
+		/// <param name="data">追加対象</param>
+		public void AddResult( stThicknessResult data) {
+			int grPage = pageMax/PAGE_SIZE;
+			if (nowGroupNo != grPage) nowPageData = LoadFile(grPage);
+//			if (nowPageData.Count() == PAGE_SIZE) AddGroup();
+
+			ResultCount4Rank[data.GetRankValue()+1]++;		// 合否カウント更新
+
+			nowPageData.Add(data);
+			SaveFile(nowPageData, grPage);
+			pageMax++;
+
+		}
+
+		/// <summary>最新の分割番号でグループを取得する</summary>
+		void AddGroup() {
+			SaveFile(nowPageData, pageMax/PAGE_SIZE +1);
+			nowPageData = new List<stThicknessResult>();
+		}
+
+		/// <summary>ページ番号から指定されたリザルトデータを取得する</summary>
+		/// <param name="page">ページ番号</param>
+		/// <returns>リザルトデータ</returns>
+		public stThicknessResult ReadResult(int page) {
+			if (pageMax == 0) return null;
+			if (page >= pageMax) page = pageMax-1;
+			var divPage = page % PAGE_SIZE;
+			var grPage = page / PAGE_SIZE;
+
+			if (nowGroupNo != grPage) nowPageData = LoadFile(grPage);
+			return nowPageData[divPage];
+		}
+
+		/// <summary>ファイルからリザルトデータをロードする</summary>
+		/// <param name="divisionNo">分割ファイルの番号</param>
+		/// <returns></returns>
+		List<stThicknessResult> LoadFile(int divisionNo) {
+			string file = String.Format("{0}_{1:0000}", filePattern, divisionNo);
+			nowGroupNo = divisionNo;
+			return LoadFile(file);
+		}
+		List<stThicknessResult> LoadFile(string fileName) {
+			var data = ObjectSerializer.LoadFile(String.Format("./{0}/{1}", folderName, fileName)) as List<stThicknessResult>;
+			if (data == null) data = new List<stThicknessResult>();
+			return data;
+		}
+
+		/// <summary>分割ファイルにデータを保存する</summary>
+		/// <param name="data">保存対象</param>
+		/// <param name="divisionNo">保存用の分割番号</param>
+		void SaveFile(object data, int divisionNo) {
+			string file = String.Format("{0}_{1:0000}", filePattern, divisionNo);
+			SaveFile(data, file);
+
+		}
+		void SaveFile(object data, string fileName) {
+			ObjectSerializer.SaveFile( data, String.Format("./{0}/{1}", folderName, fileName));
+			return;
+		}
 	}
 
 	// オフセットデータ保存用クラス
@@ -1282,7 +1416,11 @@ namespace ThicknessMeasure {
 			_judgeRangeColor = judgeRangeColor;
 		}
 
-		// 判定レベルを返却する
+		/// <summary>判定レベルを返却する
+		/// -1:不合格 / 0:ぎりぎり合格 / 1:標準合格 / 2特殊採用
+		/// </summary>
+		/// <param name="val">検査データ</param>
+		/// <returns></returns>
 		public int GetJudgeTypeNo(double val) {
 			int i;
 			int cnt = _judgeRange.Length;
@@ -1343,6 +1481,83 @@ namespace ThicknessMeasure {
 			this._results = results;
 			this._allAverage = allAverage;
 			this._allResult = allResult;
+		}
+
+		/// <summary>
+		/// 文字列の最後尾にある数値データを取得する
+		/// </summary>
+		/// <param name="str">数値が含まれる文字列</param>
+		/// <returns>変換後の実数</returns>
+		double _getEndValue(String str) {
+			int i, e = 0;
+			for (i=str.Length-1; i>0; i--) {
+				if ((str[i]>='0' && str[i]<='9') || str[i]=='.') {
+					break;
+				}
+			}
+			e = i+1;
+			for (; i>0; i--) {
+				if ((str[i]>='0' && str[i]<='9') || str[i]=='.') {
+				} else {
+					i++;
+					break;
+				}
+			}
+			return double.Parse(str.Substring(i, e-i));
+		}
+
+		/// <summary>内部保持のresults[][]からランクを取得する。内部allResultも更新する</summary>
+		public int GetRankValue() {
+			double min=1000, max=0,mintmp,maxtmp;
+			string[] vals = _allResult.Split(new char[] { ',' });
+			int r;
+			if( vals.Length >= 2) {
+				r = int.Parse(vals[1]);
+			} else {
+				for( int i=0; i<7; i++) {
+					mintmp = _getEndValue(_results[0][i]);
+					maxtmp = _getEndValue(_results[1][i]);
+					min = (min<mintmp) ? min : mintmp;
+					max = (max>maxtmp) ? max : maxtmp;
+				}
+				r = ExpansionClass.GetMeasureLvMax(type.GetJudgeTypeNo(min),type.GetJudgeTypeNo(max));
+				switch (r) {
+				case 0:
+					_allResult = "合格,0";
+					break;
+				case 1:
+					_allResult = "合格,1";
+					break;
+				case 2:
+					_allResult = "合格,2";
+					break;
+				default:
+					_allResult = "不合格,-1";
+					break;
+				}
+			}
+			return r;
+		}
+
+		/// <summary>取得AD値から電圧に変換して吐き出す。列データ・-1････で繰り返す</summary>
+		public IEnumerable<float> GetResultVoltage() {
+
+			if (_result == null) yield break;
+
+			int i_size = _result.Length-3;
+			int j_size = _result[0].Length;
+
+			for (int i = 0; i<i_size; i++) {
+				for (int j = 0; j<j_size; j++) {
+					if (_result[i][j] != null) {
+						yield return _result[i][j].adValue*10.0f/65536f;
+					} else {
+						yield return 0;
+					}
+				}
+				yield return float.NaN;
+			}
+			yield break;
 		}
 
 		// Foreach用のyield関数
@@ -1406,6 +1621,13 @@ namespace ThicknessMeasure {
 		// 結果を表の文字列に変換する関数
 		public String GetResultStr() {
 			return String.Format("{0}{1} / {2}", Group, Pos, Math.Round(mmValue, 2).ToString("F2"));
+		}
+
+		/// <summary>判定地取得 -1:不合格 / 0:ぎりぎり合格 / 1:標準合格 / 2特殊採用</summary>
+		public int GetResultRank() => type.GetJudgeTypeNo(mmValue);
+
+		public void SetPosPer( int pos, int length ) {
+			PosPer = (float)pos /length;
 		}
 
 		// デバッグ表示用
@@ -1539,6 +1761,45 @@ namespace ThicknessMeasure {
 			return radius;
 //			double xLen = targetX -cirBase.X;
 //			return (float)Math.Sqrt(radius*radius - xLen*xLen);
+		}
+
+
+	}
+
+	public class DummyData {
+		//public static stThickness CreatDummyData() {
+
+		//}
+
+		decimal GetRandamData(decimal baseValue, decimal range) {
+			var rnd = new System.Random();
+			decimal rngVal = ((decimal)(rnd.NextDouble() -0.5) *range * 2) ;
+			return rngVal + baseValue;
+		}
+
+	}
+
+	public static class ExpansionClass {
+
+		/// <summary>
+		/// リストを捜査し、判定結果の分類を各々の数で取得する
+		/// </summary>
+		/// <param name="my"></param>
+		/// <returns></returns>
+		public static int[] GetResultRank(this List<stThicknessResult> my) {
+			int[] r = { 0, 0, 0, 0 };
+			int lv;
+			foreach (var d in my) {
+				lv = d.GetRankValue();
+				r[lv+1]++;
+			}
+			return r;
+		}
+
+		/// <summary>判定結果の悪いほうを返す  -1:不合格 / 0:ぎりぎり合格 / 1:標準合格 / 2特殊採用</summary>
+		public static int GetMeasureLvMax(int d1, int d2) {
+			int[] sort = new int[] { 3, 2, 0, 1 };      // 優先順位(不合格 > 特殊合格 > ギリギリ合格 > 合格）
+			return (sort[d1+1] > sort[d2+1]) ? d1 : d2;
 		}
 
 
