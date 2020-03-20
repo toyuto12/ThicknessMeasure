@@ -18,7 +18,7 @@ using System.Timers;
 namespace ThicknessMeasure {
 	public partial class Form1 :Form {
 
-		const String VerMes = "Ver 0.90b";
+		const String VerMes = "Ver 0.91";
 		const String OFFSET_FILE_NAME = "ofs.dat";							// オフセットデータ保存用ファイル名
 		const String DATA_FILE_NAME = "result";								// データ保存用ファイル名プレフィックス
 
@@ -29,7 +29,7 @@ namespace ThicknessMeasure {
 		Queue<stThickness[][]> Result = new Queue<stThickness[][]>();       // 測定データ取得整理後の蓄積用キュー（１シート単位）
 		Queue<Char[]> SensorErrQ = new Queue<char[]>();                     // センサーエラー検知時のデータ保持キュー
 
-		TicknessResultAdapter ResultMaster = new TicknessResultAdapter(DateTime.Now);
+		TicknessResultAdapter ResultMaster; // = new TicknessResultAdapter(DateTime.Now);
 
 		stThicknessResult nowDisplayData;									// 表示中データ
 		int nowLot = 0;
@@ -936,6 +936,7 @@ namespace ThicknessMeasure {
 
 		// 測定結果ページ表示の一括管理
 		void PageValueExchange( int page, int maxPage) {
+			if ( page > maxPage ) page = maxPage;
 			lResultPageMax.Text = String.Format("/{0}", maxPage);
 			nudResultPage.Maximum = maxPage;
 			if (maxPage > 0) nudResultPage.Minimum = 1;
@@ -1137,28 +1138,19 @@ namespace ThicknessMeasure {
 				int cnt = 0;
 				bool dataEn = true;
 				int[] errCnt = new int[] { 0, 0, 0, 0, 0, 0, 0 };
-				int DataEdgeNo = -1;
-				int DataEdgeCnt = 0;
 
 				for (int i = 0; i<data.Length; i++) {
 					if (data[i] != 0xFFFF) {
 						if (data[i] == 0) dataEn = false;
 						else if (data[i] == 0xFFFE) errCnt[gr-'A']++;
-
-						var tmp = new stThickness( SelectedType, data[i], Offset[gr-'A'].ad, Offset[gr-'A'].mm, gr, cnt, 1 );
-						if ( tmp.mmValue >= 12 ) isDataEdge = i/8 ;
-
-						// row.Add(new stThickness(SelectedType, data[i], Offset[gr-'A'].ad, Offset[gr-'A'].mm, gr, i/8, data.Length/8));
+						row.Add(new stThickness(SelectedType, data[i], Offset[gr-'A'].ad, Offset[gr-'A'].mm, gr, i/8, data.Length/8));
 						gr++;
 					} else {
 						if( !dataEn) cnt++;
 						col.Add(row.ToArray());
 						dataEn = true;
 						_monitor = row.ToArray();
-						if ( isDataEdge ) DataEdgeCnt++;
-						if ( DataEdgeCnt > 2 ) {
-							row = new List<stThickness>();
-						}
+						row = new List<stThickness>();
 
 						gr = 'A';
 					}
@@ -1208,6 +1200,15 @@ namespace ThicknessMeasure {
 			}
 		}
 
+		private void bResultDelete_Click( object sender, EventArgs e ) {
+			if ( ResultMaster.pageMax > 0 ) {
+				bResultDelete.Enabled = false;
+				ResultMaster.DeleteResult( (int)nudResultPage.Value-1 );
+				DisplayResult( (int)nudResultPage.Value-1 );
+				bResultDelete.Enabled = true;
+			}
+		}
+
 		// 検査結果表示の背景色を変更する
 		void ChangeReportColor(Color title, Color items) {
 			tbResultDate.BackColor = items;
@@ -1244,8 +1245,6 @@ namespace ThicknessMeasure {
 	}
 
 	public class TicknessResultAdapter {
-//		int lotNo;
-//		int offset;
 
 		public int pageMax { get; private set; }
 		int nowGroupNo;
@@ -1328,10 +1327,10 @@ namespace ThicknessMeasure {
 		}
 
 		/// <summary>最新の分割番号でグループを取得する</summary>
-		void AddGroup() {
-			SaveFile(nowPageData, pageMax/PAGE_SIZE +1);
-			nowPageData = new List<stThicknessResult>();
-		}
+		//void AddGroup() {
+		//	SaveFile(nowPageData, pageMax/PAGE_SIZE +1);
+		//	nowPageData = new List<stThicknessResult>();
+		//}
 
 		/// <summary>ページ番号から指定されたリザルトデータを取得する</summary>
 		/// <param name="page">ページ番号</param>
@@ -1344,6 +1343,33 @@ namespace ThicknessMeasure {
 
 			if (nowGroupNo != grPage) nowPageData = LoadFile(grPage);
 			return nowPageData[divPage];
+		}
+
+		public void DeleteResult(int page) {
+			if ( page >= pageMax ) page = pageMax-1;
+			var divPage = page %PAGE_SIZE;
+			var grPage = page /PAGE_SIZE;
+			var grMax = (pageMax-1) /PAGE_SIZE;
+
+
+			List<stThicknessResult> delPage = LoadFile( grPage );
+			ResultCount4Rank[delPage[divPage].GetRankValue()+1]--;
+			pageMax--;
+			delPage.RemoveAt( divPage );
+
+			List<stThicknessResult> dest, src=null;
+			dest = delPage;
+			for ( ; grPage<grMax; grPage++ ) {
+				src = LoadFile( grPage+1 );
+
+				dest.Add( src[0] );
+				src.RemoveAt( 0 );
+				SaveFile( dest, grPage );
+				dest = src;
+			}
+			if ( dest.Count > 0 ) SaveFile( dest, grPage );
+			else DeleteFile( grPage );
+			nowGroupNo = -1;
 		}
 
 		/// <summary>ファイルからリザルトデータをロードする</summary>
@@ -1371,6 +1397,13 @@ namespace ThicknessMeasure {
 		void SaveFile(object data, string fileName) {
 			ObjectSerializer.SaveFile( data, String.Format("./{0}/{1}", folderName, fileName));
 			return;
+		}
+
+		void DeleteFile( int divisionNo ) {
+			string file = String.Format( "./{0}/{1}_{2:0000}",folderName, filePattern, divisionNo );
+			if ( File.Exists( file ) ) {
+				File.Delete( file );
+			}
 		}
 	}
 

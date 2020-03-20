@@ -28,6 +28,7 @@
 			this.bCommScan = new System.Windows.Forms.Button();
 			this.cbPortList = new System.Windows.Forms.ComboBox();
 			this.gbCont = new System.Windows.Forms.GroupBox();
+			this.button2 = new System.Windows.Forms.Button();
 			this.tbLotName = new System.Windows.Forms.TextBox();
 			this.label1 = new System.Windows.Forms.Label();
 			this.bGraph = new System.Windows.Forms.Button();
@@ -94,7 +95,7 @@
 			this.tbAllAverage = new System.Windows.Forms.TextBox();
 			this.gbOffset = new System.Windows.Forms.GroupBox();
 			this.pd = new System.Drawing.Printing.PrintDocument();
-			this.button2 = new System.Windows.Forms.Button();
+			this.bResultDelete = new System.Windows.Forms.Button();
 			this.gbCont.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.nudOffsetG)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.nudOffsetF)).BeginInit();
@@ -166,6 +167,19 @@
 			this.gbCont.TabIndex = 3;
 			this.gbCont.TabStop = false;
 			this.gbCont.Text = "操作部";
+			// 
+			// button2
+			// 
+			this.button2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+			this.button2.Font = new System.Drawing.Font("MS UI Gothic", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+			this.button2.Location = new System.Drawing.Point(138, 86);
+			this.button2.Margin = new System.Windows.Forms.Padding(0);
+			this.button2.Name = "button2";
+			this.button2.Size = new System.Drawing.Size(45, 29);
+			this.button2.TabIndex = 52;
+			this.button2.Text = "キョリ";
+			this.button2.UseVisualStyleBackColor = true;
+			this.button2.Click += new System.EventHandler(this.button2_Click);
 			// 
 			// tbLotName
 			// 
@@ -891,6 +905,7 @@
             this.columnHeader1});
 			this.lvResult.FullRowSelect = true;
 			this.lvResult.GridLines = true;
+			this.lvResult.HideSelection = false;
 			this.lvResult.Location = new System.Drawing.Point(123, 335);
 			this.lvResult.MultiSelect = false;
 			this.lvResult.Name = "lvResult";
@@ -953,14 +968,14 @@
             this.menuThicknessMonitor,
             this.公正有効化ToolStripMenuItem});
 			this.ツールTToolStripMenuItem.Name = "ツールTToolStripMenuItem";
-			this.ツールTToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
+			this.ツールTToolStripMenuItem.Size = new System.Drawing.Size(43, 20);
 			this.ツールTToolStripMenuItem.Text = "機能";
 			// 
 			// menuThicknessMonitor
 			// 
 			this.menuThicknessMonitor.Enabled = false;
 			this.menuThicknessMonitor.Name = "menuThicknessMonitor";
-			this.menuThicknessMonitor.Size = new System.Drawing.Size(130, 22);
+			this.menuThicknessMonitor.Size = new System.Drawing.Size(134, 22);
 			this.menuThicknessMonitor.Text = "厚みモニター";
 			this.menuThicknessMonitor.Click += new System.EventHandler(this.menuThicknessMonitor_Click);
 			// 
@@ -968,12 +983,13 @@
 			// 
 			this.公正有効化ToolStripMenuItem.Enabled = false;
 			this.公正有効化ToolStripMenuItem.Name = "公正有効化ToolStripMenuItem";
-			this.公正有効化ToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
+			this.公正有効化ToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
 			this.公正有効化ToolStripMenuItem.Text = "校正有効化";
 			this.公正有効化ToolStripMenuItem.Click += new System.EventHandler(this.公正有効化ToolStripMenuItem_Click);
 			// 
 			// gbAllResult
 			// 
+			this.gbAllResult.Controls.Add(this.bResultDelete);
 			this.gbAllResult.Controls.Add(this.bPrintout);
 			this.gbAllResult.Controls.Add(this.lAllAverage);
 			this.gbAllResult.Controls.Add(this.bAllResult);
@@ -1059,18 +1075,17 @@
 			this.gbOffset.TabStop = false;
 			this.gbOffset.Text = "校正";
 			// 
-			// button2
+			// bResultDelete
 			// 
-			this.button2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-			this.button2.Font = new System.Drawing.Font("MS UI Gothic", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-			this.button2.Location = new System.Drawing.Point(138, 86);
-			this.button2.Margin = new System.Windows.Forms.Padding(0);
-			this.button2.Name = "button2";
-			this.button2.Size = new System.Drawing.Size(45, 29);
-			this.button2.TabIndex = 52;
-			this.button2.Text = "キョリ";
-			this.button2.UseVisualStyleBackColor = true;
-			this.button2.Click += new System.EventHandler(this.button2_Click);
+			this.bResultDelete.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+			this.bResultDelete.Font = new System.Drawing.Font("MS UI Gothic", 25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+			this.bResultDelete.Location = new System.Drawing.Point(1138, 23);
+			this.bResultDelete.Name = "bResultDelete";
+			this.bResultDelete.Size = new System.Drawing.Size(158, 54);
+			this.bResultDelete.TabIndex = 53;
+			this.bResultDelete.Text = "削除";
+			this.bResultDelete.UseVisualStyleBackColor = true;
+			this.bResultDelete.Click += new System.EventHandler(this.bResultDelete_Click);
 			// 
 			// Form1
 			// 
@@ -1188,6 +1203,7 @@
 		private System.Drawing.Printing.PrintDocument pd;
 		private System.Windows.Forms.Button bPrintout;
 		private System.Windows.Forms.Button button2;
+		private System.Windows.Forms.Button bResultDelete;
 	}
 }
 
