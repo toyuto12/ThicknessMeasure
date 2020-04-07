@@ -12,6 +12,8 @@ namespace ThicknessMeasure {
 		List<List<String>> _cell;
 		Point offset;
 
+		public bool IsEmpty { get { return _cell.Count() == 0; } }
+
 		public CsvOutput() {
 			_cell = new List<List<string>>();
 		}
@@ -24,6 +26,8 @@ namespace ThicknessMeasure {
 		}
 
 		public void FileOut( String filePath ) {
+
+			if ( _cell.Count == 0 ) return;
 
 			int no = 0;
 			String fp = Path.GetFileNameWithoutExtension(filePath);

@@ -88,14 +88,17 @@
 			this.ツールTToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuThicknessMonitor = new System.Windows.Forms.ToolStripMenuItem();
 			this.公正有効化ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.設定ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.gbAllResult = new System.Windows.Forms.GroupBox();
+			this.bResultAllDelete = new System.Windows.Forms.Button();
+			this.bResultDelete = new System.Windows.Forms.Button();
 			this.bPrintout = new System.Windows.Forms.Button();
 			this.lAllAverage = new System.Windows.Forms.Label();
 			this.bAllResult = new System.Windows.Forms.Button();
 			this.tbAllAverage = new System.Windows.Forms.TextBox();
 			this.gbOffset = new System.Windows.Forms.GroupBox();
 			this.pd = new System.Drawing.Printing.PrintDocument();
-			this.bResultDelete = new System.Windows.Forms.Button();
+			this.lQty = new System.Windows.Forms.Label();
 			this.gbCont.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.nudOffsetG)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.nudOffsetF)).BeginInit();
@@ -159,7 +162,6 @@
 			this.gbCont.Controls.Add(this.cbBodyType);
 			this.gbCont.Controls.Add(this.button5);
 			this.gbCont.Controls.Add(this.bMeasure);
-			this.gbCont.Enabled = false;
 			this.gbCont.Font = new System.Drawing.Font("MS UI Gothic", 15F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
 			this.gbCont.Location = new System.Drawing.Point(12, 85);
 			this.gbCont.Name = "gbCont";
@@ -643,6 +645,7 @@
 			// 
 			// gbResult
 			// 
+			this.gbResult.Controls.Add(this.lQty);
 			this.gbResult.Controls.Add(this.tbResultLotName);
 			this.gbResult.Controls.Add(this.lLotDisp);
 			this.gbResult.Controls.Add(this.lNGValue);
@@ -946,10 +949,10 @@
 			this.gbConnect.TabIndex = 4;
 			this.gbConnect.TabStop = false;
 			this.gbConnect.Text = "接続";
+			this.gbConnect.Visible = false;
 			// 
 			// timer1
 			// 
-			this.timer1.Enabled = true;
 			this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
 			// 
 			// menuStrip1
@@ -966,14 +969,14 @@
 			// 
 			this.ツールTToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuThicknessMonitor,
-            this.公正有効化ToolStripMenuItem});
+            this.公正有効化ToolStripMenuItem,
+            this.設定ToolStripMenuItem});
 			this.ツールTToolStripMenuItem.Name = "ツールTToolStripMenuItem";
 			this.ツールTToolStripMenuItem.Size = new System.Drawing.Size(43, 20);
 			this.ツールTToolStripMenuItem.Text = "機能";
 			// 
 			// menuThicknessMonitor
 			// 
-			this.menuThicknessMonitor.Enabled = false;
 			this.menuThicknessMonitor.Name = "menuThicknessMonitor";
 			this.menuThicknessMonitor.Size = new System.Drawing.Size(134, 22);
 			this.menuThicknessMonitor.Text = "厚みモニター";
@@ -981,14 +984,21 @@
 			// 
 			// 公正有効化ToolStripMenuItem
 			// 
-			this.公正有効化ToolStripMenuItem.Enabled = false;
 			this.公正有効化ToolStripMenuItem.Name = "公正有効化ToolStripMenuItem";
 			this.公正有効化ToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
 			this.公正有効化ToolStripMenuItem.Text = "校正有効化";
 			this.公正有効化ToolStripMenuItem.Click += new System.EventHandler(this.公正有効化ToolStripMenuItem_Click);
 			// 
+			// 設定ToolStripMenuItem
+			// 
+			this.設定ToolStripMenuItem.Name = "設定ToolStripMenuItem";
+			this.設定ToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
+			this.設定ToolStripMenuItem.Text = "設定";
+			this.設定ToolStripMenuItem.Click += new System.EventHandler(this.設定ToolStripMenuItem_Click);
+			// 
 			// gbAllResult
 			// 
+			this.gbAllResult.Controls.Add(this.bResultAllDelete);
 			this.gbAllResult.Controls.Add(this.bResultDelete);
 			this.gbAllResult.Controls.Add(this.bPrintout);
 			this.gbAllResult.Controls.Add(this.lAllAverage);
@@ -1001,6 +1011,30 @@
 			this.gbAllResult.TabIndex = 13;
 			this.gbAllResult.TabStop = false;
 			this.gbAllResult.Text = "総合結果";
+			// 
+			// bResultAllDelete
+			// 
+			this.bResultAllDelete.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+			this.bResultAllDelete.Font = new System.Drawing.Font("MS UI Gothic", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+			this.bResultAllDelete.Location = new System.Drawing.Point(1290, 23);
+			this.bResultAllDelete.Name = "bResultAllDelete";
+			this.bResultAllDelete.Size = new System.Drawing.Size(38, 54);
+			this.bResultAllDelete.TabIndex = 54;
+			this.bResultAllDelete.Text = "全削除";
+			this.bResultAllDelete.UseVisualStyleBackColor = true;
+			this.bResultAllDelete.Click += new System.EventHandler(this.bResultAllDelete_Click);
+			// 
+			// bResultDelete
+			// 
+			this.bResultDelete.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+			this.bResultDelete.Font = new System.Drawing.Font("MS UI Gothic", 25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+			this.bResultDelete.Location = new System.Drawing.Point(1094, 23);
+			this.bResultDelete.Name = "bResultDelete";
+			this.bResultDelete.Size = new System.Drawing.Size(158, 54);
+			this.bResultDelete.TabIndex = 53;
+			this.bResultDelete.Text = "削除";
+			this.bResultDelete.UseVisualStyleBackColor = true;
+			this.bResultDelete.Click += new System.EventHandler(this.bResultDelete_Click);
 			// 
 			// bPrintout
 			// 
@@ -1075,17 +1109,14 @@
 			this.gbOffset.TabStop = false;
 			this.gbOffset.Text = "校正";
 			// 
-			// bResultDelete
+			// lQty
 			// 
-			this.bResultDelete.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-			this.bResultDelete.Font = new System.Drawing.Font("MS UI Gothic", 25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-			this.bResultDelete.Location = new System.Drawing.Point(1138, 23);
-			this.bResultDelete.Name = "bResultDelete";
-			this.bResultDelete.Size = new System.Drawing.Size(158, 54);
-			this.bResultDelete.TabIndex = 53;
-			this.bResultDelete.Text = "削除";
-			this.bResultDelete.UseVisualStyleBackColor = true;
-			this.bResultDelete.Click += new System.EventHandler(this.bResultDelete_Click);
+			this.lQty.AutoSize = true;
+			this.lQty.Font = new System.Drawing.Font("MS UI Gothic", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+			this.lQty.Location = new System.Drawing.Point(582, 144);
+			this.lQty.Name = "lQty";
+			this.lQty.Size = new System.Drawing.Size(0, 14);
+			this.lQty.TabIndex = 51;
 			// 
 			// Form1
 			// 
@@ -1204,6 +1235,9 @@
 		private System.Windows.Forms.Button bPrintout;
 		private System.Windows.Forms.Button button2;
 		private System.Windows.Forms.Button bResultDelete;
+		private System.Windows.Forms.ToolStripMenuItem 設定ToolStripMenuItem;
+		private System.Windows.Forms.Button bResultAllDelete;
+		private System.Windows.Forms.Label lQty;
 	}
 }
 
