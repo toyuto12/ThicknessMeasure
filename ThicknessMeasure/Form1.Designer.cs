@@ -58,6 +58,7 @@
 			this.nudOffsetD = new System.Windows.Forms.NumericUpDown();
 			this.nudOffsetC = new System.Windows.Forms.NumericUpDown();
 			this.gbResult = new System.Windows.Forms.GroupBox();
+			this.lQty = new System.Windows.Forms.Label();
 			this.tbResultLotName = new System.Windows.Forms.TextBox();
 			this.lLotDisp = new System.Windows.Forms.Label();
 			this.lNGValue = new System.Windows.Forms.Label();
@@ -98,7 +99,6 @@
 			this.tbAllAverage = new System.Windows.Forms.TextBox();
 			this.gbOffset = new System.Windows.Forms.GroupBox();
 			this.pd = new System.Drawing.Printing.PrintDocument();
-			this.lQty = new System.Windows.Forms.Label();
 			this.gbCont.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.nudOffsetG)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.nudOffsetF)).BeginInit();
@@ -181,6 +181,7 @@
 			this.button2.TabIndex = 52;
 			this.button2.Text = "キョリ";
 			this.button2.UseVisualStyleBackColor = true;
+			this.button2.Visible = false;
 			this.button2.Click += new System.EventHandler(this.button2_Click);
 			// 
 			// tbLotName
@@ -665,6 +666,15 @@
 			this.gbResult.TabStop = false;
 			this.gbResult.Text = "検査結果";
 			// 
+			// lQty
+			// 
+			this.lQty.AutoSize = true;
+			this.lQty.Font = new System.Drawing.Font("MS UI Gothic", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+			this.lQty.Location = new System.Drawing.Point(582, 144);
+			this.lQty.Name = "lQty";
+			this.lQty.Size = new System.Drawing.Size(0, 14);
+			this.lQty.TabIndex = 51;
+			// 
 			// tbResultLotName
 			// 
 			this.tbResultLotName.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
@@ -1108,15 +1118,6 @@
 			this.gbOffset.TabIndex = 42;
 			this.gbOffset.TabStop = false;
 			this.gbOffset.Text = "校正";
-			// 
-			// lQty
-			// 
-			this.lQty.AutoSize = true;
-			this.lQty.Font = new System.Drawing.Font("MS UI Gothic", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-			this.lQty.Location = new System.Drawing.Point(582, 144);
-			this.lQty.Name = "lQty";
-			this.lQty.Size = new System.Drawing.Size(0, 14);
-			this.lQty.TabIndex = 51;
 			// 
 			// Form1
 			// 

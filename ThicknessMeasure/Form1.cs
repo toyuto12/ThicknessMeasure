@@ -18,7 +18,7 @@ using System.Timers;
 namespace ThicknessMeasure {
 	public partial class Form1 :Form {
 
-		const String VerMes = "Ver 1.00";
+		const String VerMes = "Ver 1.00a";
 		const String OFFSET_FILE_NAME = "ofs.dat";							// オフセットデータ保存用ファイル名
 		const String DATA_FILE_NAME = "result";                             // データ保存用ファイル名プレフィックス
 		const String BODY_TYPE_NAME = "bodytype.dat";
@@ -119,9 +119,8 @@ namespace ThicknessMeasure {
 			Base.addCol(new float[] { 54f, 102f, 150f, 198f, 246f, 294f });
 
 			_aio = new AIO121602();
-//			if ( _aio.LastErrorNo != 0 ) {
-			if ( _aio.LastErrorNo == -1 ) {
-					MessageBox.Show( "ADモジュールとの接続が確立できませんでした。\r\nUSBケーブルを差し直して下さい" );
+			if ( _aio.LastErrorNo != 0 ) {
+				MessageBox.Show( "ADモジュールとの接続が確立できませんでした。\r\nUSBケーブルを差し直して下さい" );
 				Application.Exit();
 				return;
 			}
@@ -162,7 +161,6 @@ namespace ThicknessMeasure {
 
 			// 名前一覧の読み出し
 			LoadMemberList("member.txt");
-
 
 			// 印刷時のメソッド登録
 			pd.PrintPage += Pd_PrintPage;
